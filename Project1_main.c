@@ -18,6 +18,16 @@
 
 // TODO: Define the bitmask for all the Launchpad's and BoosterPack's buttons and LEDs
 
+#define RIGHT_BUTTON BIT4   // P1.4
+#define S1_BUTTON BIT1	    // P5.1
+#define S2_BUTTON BIT5	    // P3.5
+#define BSTRLED_RED BIT6    // P2.6
+#define BSTRLED_GRN BIT4   // P2.4
+#define BSTRLED_BLU BIT6    // P5.6
+
+#define LAUNCHLED_RED BIT0    // P2.0
+#define LAUNCHLED_GRN BIT1    // P2.1
+#define LAUNCHLED_BLU BIT2    // P2.2
 
 ////////////Function Declarations/////////////////////////////
 
@@ -83,15 +93,45 @@ void LED2Colors(color_selected_t picked) {
     {
 
 	case Red:
-	    // turn on LED2 to Red. Make sure blue and green are off.
+	    P2OUT = P2OUT |  LAUNCHLED_RED;
+	    P2OUT = P2OUT & ~LAUNCHLED_GRN;
+	    P2OUT = P2OUT & ~LAUNCHLED_BLU;
 	    break;
 
-	// Implement all other cases
-
 	case Blue:
+	    P2OUT = P2OUT & ~LAUNCHLED_RED;
+	    P2OUT = P2OUT & ~LAUNCHLED_GRN;
+	    P2OUT = P2OUT |  LAUNCHLED_BLU;
+	    break;
 
-    break;
+	case Green:
+	    P2OUT = P2OUT & ~LAUNCHLED_RED;
+	    P2OUT = P2OUT |  LAUNCHLED_GRN;
+	    P2OUT = P2OUT & ~LAUNCHLED_BLU;
+	    break;
+
+	case Purple:
+	    P2OUT = P2OUT |  LAUNCHLED_RED;
+	    P2OUT = P2OUT & ~LAUNCHLED_GRN;
+	    P2OUT = P2OUT |  LAUNCHLED_BLU;
+	    break;
+
+	case Orange:
+	    P2OUT = P2OUT |  LAUNCHLED_RED;
+	    P2OUT = P2OUT |  LAUNCHLED_GRN;
+	    P2OUT = P2OUT & ~LAUNCHLED_BLU;
+	    break;
+
+	case White:
+	    P2OUT = P2OUT |  LAUNCHLED_RED;
+	    P2OUT = P2OUT |  LAUNCHLED_GRN;
+	    P2OUT = P2OUT |  LAUNCHLED_BLU;
+	    break;
+
 	default:
+	    P2OUT = P2OUT & ~LAUNCHLED_RED;
+	    P2OUT = P2OUT & ~LAUNCHLED_GRN;
+	    P2OUT = P2OUT & ~LAUNCHLED_BLU;
 	    // turn off all LED2s
     }
 }
@@ -104,11 +144,101 @@ void LED2Colors(color_selected_t picked) {
 // the Left LED on Launchpad should be off and last but not least, pick->LEDColor should be updated to be "Red".
 // Note that the picked color for an invalid button combination should be "none" that is defined in the enum of colors.
 void BoosterLEDColors(drawn_color_t *pick) {
+
+    if(((P5IN & S1_BUTTON) == PRESSED) && ((P3IN & S2_BUTTON) == PRESSED))
+    {
+    	P2OUT = P2OUT |  BSTRLED_RED;
+    	P2OUT = P2OUT |  BSTRLED_GRN;
+    	P5OUT = P5OUT |  BSTRLED_BLU;
+
+        P1OUT = P1OUT & ~LEFT_LED;
+        pick->LEDColor = White;
+    }
+    else if(((P1IN & LEFT_BUTTON) == PRESSED) && ((P1IN & RIGHT_BUTTON) == PRESSED))
+    {
+    	P2OUT = P2OUT |  BSTRLED_RED;
+    	P2OUT = P2OUT & ~BSTRLED_GRN;
+    	P5OUT = P5OUT |  BSTRLED_BLU;
+
+    	P1OUT = P1OUT & ~LEFT_LED;
+    	pick->LEDColor = Purple;
+    }
+    else if(((P1IN & LEFT_BUTTON) == PRESSED))
+    {
+	P2OUT = P2OUT |  BSTRLED_RED;
+	P2OUT = P2OUT & ~BSTRLED_GRN;
+	P5OUT = P5OUT & ~BSTRLED_BLU;
+
+	P1OUT = P1OUT & ~LEFT_LED;
+	pick->LEDColor = Red;
+    }
+    else if(((P1IN & RIGHT_BUTTON) == PRESSED))
+    {
+	P2OUT = P2OUT & ~BSTRLED_RED;
+	P2OUT = P2OUT & ~BSTRLED_GRN;
+	P5OUT = P5OUT |  BSTRLED_BLU;
+
+	P1OUT = P1OUT & ~LEFT_LED;
+	pick->LEDColor = Blue;
+    }
+    else if(((P5IN & S1_BUTTON) == PRESSED))
+    {
+	P2OUT = P2OUT & ~BSTRLED_RED;
+	P2OUT = P2OUT |  BSTRLED_GRN;
+	P5OUT = P5OUT & ~BSTRLED_BLU;
+
+	P1OUT = P1OUT & ~LEFT_LED;
+	pick->LEDColor = Green;
+    }
+    else if(((P3IN & S2_BUTTON) == PRESSED))
+    {
+	P2OUT = P2OUT |  BSTRLED_RED;
+	P2OUT = P2OUT |  BSTRLED_GRN;
+	P5OUT = P5OUT & ~BSTRLED_BLU;
+
+    	P1OUT = P1OUT & ~LEFT_LED;
+    	pick->LEDColor = Orange;
+    }
+    else
+    {
+	P2OUT = P2OUT & ~BSTRLED_RED;
+	P2OUT = P2OUT & ~BSTRLED_GRN;
+	P5OUT = P5OUT & ~BSTRLED_BLU;
+
+	P1OUT = P1OUT |  LEFT_LED;
+	pick->LEDColor = none;
+    }
+
 }
 
 // TODO: Complete this function such that all the BoosterPack and Launchpad connected pins are configured properly.
 void InitGPIO() {
 
+    P1DIR |= LEFT_LED;
+
+    P2DIR |= LAUNCHLED_RED;
+    P2DIR |= LAUNCHLED_GRN;
+    P2DIR |= LAUNCHLED_BLU;
+
+    P2DIR |= BSTRLED_RED;
+    P2DIR |= BSTRLED_GRN;
+    P5DIR |= BSTRLED_BLU;
+
+    P1DIR |= LEFT_BUTTON;
+    P1REN |= LEFT_BUTTON;
+    P1OUT |= LEFT_BUTTON;
+
+    P1DIR |= RIGHT_BUTTON;
+    P1REN |= RIGHT_BUTTON;
+    P1OUT |= RIGHT_BUTTON;
+
+    P5DIR |= S1_BUTTON;
+    P5REN |= S1_BUTTON;
+    P5OUT |= S1_BUTTON;
+
+    P3DIR |= S2_BUTTON;
+    P3REN |= S2_BUTTON;
+    P3OUT |= S2_BUTTON;
 }
 
 // Initialization part is always device dependent and therefore does not change much with HAL
